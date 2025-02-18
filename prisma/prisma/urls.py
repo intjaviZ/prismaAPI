@@ -19,6 +19,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('chat/', include('chatAI.urls')),
-    path('test/', include('cuestionario.urls'))
+    path('chat/', include('prisma.chatAI.urls')),
+    path('test/', include('prisma.cuestionario.urls'))
 ]

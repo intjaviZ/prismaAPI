@@ -49,7 +49,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'prisma.urls'
+ROOT_URLCONF = 'prisma.prisma.urls'
 
 TEMPLATES = [
     {
