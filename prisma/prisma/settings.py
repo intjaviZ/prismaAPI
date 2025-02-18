@@ -34,8 +34,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'openai',
-    'chatAI',
-    'cuestionario'
+    'prisma.chatAI',
+    'prisma.cuestionario'
 ]
 
 MIDDLEWARE = [
