@@ -1,1 +1,1 @@
-web: gunicorn prisma.wsgi:application
+web: gunicorn prisma.prisma.wsgi:application
