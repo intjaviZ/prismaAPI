@@ -26,7 +26,7 @@ class EmotionalSupportView(APIView):
             "parameters": {
                 "temperature": 0.4,
                 "top_p": 0.8,
-                "max_new_tokens": 150
+                "max_new_tokens": 300
             }
         }
 
@@ -39,7 +39,6 @@ class EmotionalSupportView(APIView):
                     generated_text = output[0]["generated_text"]
                     cleaned_response = generated_text.replace(input_text, "").strip()
 
-                    # Eliminar saltos de línea innecesarios
                     cleaned_response = cleaned_response.replace("\n", " ").strip()
 
                     return Response(
