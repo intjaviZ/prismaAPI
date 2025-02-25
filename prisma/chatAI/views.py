@@ -4,42 +4,70 @@ from rest_framework import status
 from openai import OpenAI
 from anthropic import Anthropic
 from django.conf import settings
-from requests import post
+from requests import post, exceptions
 from decouple import config
 
 class EmotionalSupportView(APIView):
     def post(self, request):
         API_URL = config('API_URL')
         API_TOKEN = settings.API_TOKEN
-        try:
-            headers = {"Authorization": f"Bearer {API_TOKEN}"}
-        
-            # Obtén el texto de entrada del cuerpo de la solicitud
-            input_text = request.data.get("prompt", "")
-            payload = {"inputs": input_text}
 
-            # Envía la solicitud al modelo remoto
-            response = post(API_URL, headers=headers, json=payload)
+        input_text = request.data.get("prompt", "")
+
+        if not input_text:
+            return Response(
+            {"mensaje": "No se ha enviado una pregunta."},
+            status=status.HTTP_400_BAD_REQUEST
+            )
         
-            # Procesa la respuesta de Hugging Face
+        headers = {"Authorization": f"Bearer {API_TOKEN}"}
+        payload = {
+            "inputs": input_text,
+            "parameters": {
+                "temperature": 0.4,
+                "top_p": 0.8,
+                "max_new_tokens": 150
+            }
+        }
+
+        try:
+            response = post(API_URL, headers=headers, json=payload,timeout=90)
             if response.status_code == 200:
-                # Procesar la respuesta del modelo
                 output = response.json()
+
                 if output and isinstance(output, list) and "generated_text" in output[0]:
                     generated_text = output[0]["generated_text"]
-
-                    # Limpiar la respuesta eliminando la entrada inicial
                     cleaned_response = generated_text.replace(input_text, "").strip()
 
                     # Eliminar saltos de línea innecesarios
                     cleaned_response = cleaned_response.replace("\n", " ").strip()
 
-                    return Response({"mensaje": cleaned_response}, status=200)
+                    return Response(
+                        {"mensaje": cleaned_response},
+                        status=status.HTTP_200_OK
+                    )
+                else:
+                    return Response(
+                        {"mensaje": "Formato inesperado en la respuesta del modelo."},
+                        status=status.HTTP_502_BAD_GATEWAY
+                    )
             else:
                 return Response({"mensaje": "Error al procesar la solicitud", "error": response}, status=response.status_code)
+        except exceptions.Timeout:
+            return Response(
+                {"mensaje": "La solicitud al modelo ha superado el tiempo límite."},
+                status=status.HTTP_504_GATEWAY_TIMEOUT
+            )
+
+        except exceptions.RequestException as e:
+            return Response(
+                {"mensaje": "Error al conectar con el modelo.", "detalle": str(e)},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
         except Exception as e:
             return Response(
-                {"mensaje": f"Ocurrió un error al procesar la solicitud: {str(e)}"},
+                {"mensaje": "Ocurrió un error inesperado.", "detalle": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
